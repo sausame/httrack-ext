@@ -84,6 +84,12 @@ def saveResource(url, pathname):
 
 def download(url, basedir):
 
+    originalUrl = url
+
+    pos = originalUrl.find('://')
+
+    url = originalUrl[pos+3:]
+
     pt = '/nutrish/'
 
     pos = url.find(pt)
@@ -99,33 +105,31 @@ def download(url, basedir):
     pos = filename.rfind('/')
 
     if pos < 0:
-        return None, None
+        return None
 
     pos = filename.find('.', pos)
 
     if pos < 0:
-        return None, None
+        return None
 
     suffix = filename[pos+1:]
 
     if suffix not in ['png', 'gif', 'jpg', 'jpeg']:
-        return None, None
+        return None
 
     resdir = os.path.join(basedir, suffix)
 
     respath = os.path.join(resdir, filename)
 
-    url = 'https://{}'.format(url)
-
     if os.path.exists(respath):
-        return url, respath
+        return respath
 
-    saved = saveResource(url, respath)
+    saved = saveResource(originalUrl, respath)
 
     if not saved:
         return None, None
 
-    return url, respath
+    return respath
 
 def getPathPrefix(pathname, basedir):
 
@@ -156,7 +160,7 @@ def findAndReplace(pathname, basedir):
 
     allurls = list()
 
-    pattern = r'[\'"\(][ \t]*https://([^ \t]+?)[ \t]*[\'"\)]'
+    pattern = r'[\'"\(][ \t]*(http[s]*://[^ \t]+?)[ \t]*[\'"\)]'
     urls = getMatches(content, pattern)
 
     if urls is not None:
@@ -173,9 +177,9 @@ def findAndReplace(pathname, basedir):
 
     for url in urls:
 
-        url, respath = download(url, basedir)
+        respath = download(url, basedir)
 
-        if url is not None:
+        if respath is not None:
             respath = '{}{}'.format(pathPrefix, respath[len(basedir)+1:])
             content = content.replace(url, respath)
 
